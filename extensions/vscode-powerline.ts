@@ -22,26 +22,29 @@ const COLORS = {
   editor: "#1F1F1F",
   raised: "#252526",
   input: "#313131",
-  blue: "#0078D4",
+  blue: "#569CD6",
   contextBlue: "#264F78",
   text: "#CCCCCC",
   white: "#FFFFFF",
   muted: "#A7A7A7",
   dim: "#868686",
-  green: "#2EA043",
+  green: "#4EC9B0",
   amber: "#D7BA7D",
-  red: "#F85149",
+  red: "#F14C4C",
   orange: "#CE9178",
+  success: "#6A9955",
+  warning: "#D7BA7D",
+  thinking: "#C586C0",
   pinkLight: "#E9A6C3",
   yellow: "#DCDCAA",
   pathTeal: "#0E6B6B",
-  greenDark: "#1F6F3A",
+  greenDark: "#6A9955",
   purpleDark: "#4B3869",
   thinkingBg: "#C586C0",
 } as const;
 
 const RESET = "\x1b[0m";
-const POWERLINE_RIGHT = "";
+const STATUS_SEPARATOR = "│";
 const PULSE = ["·", "•", "●", "•"];
 
 function rgb(hex: string): string {
@@ -139,24 +142,17 @@ function contextBar(tokens: number | null, maximum: number, cells = 20): string 
   return `${"█".repeat(full)}${"░".repeat(cells - full)}`;
 }
 
-function transition(from: string, to: string): string {
-  return style(POWERLINE_RIGHT, from, to);
-}
-
-function renderSegments(segments: Segment[], finalBackground = COLORS.surface): string {
+function renderSegments(segments: Segment[]): string {
   if (segments.length === 0) return "";
-  let output = "";
-  for (let index = 0; index < segments.length; index++) {
-    const segment = segments[index]!;
-    const nextBackground = segments[index + 1]?.background ?? finalBackground;
-    output += style(` ${segment.text} `, segment.foreground ?? COLORS.text, segment.background, segment.bold);
-    output += transition(segment.background, nextBackground);
-  }
-  return output;
+  return segments
+    .map((segment) => style(` ${segment.text} `, segment.foreground ?? COLORS.text, COLORS.surface, segment.bold))
+    .join(foreground(` ${STATUS_SEPARATOR} `, COLORS.dim, COLORS.surface));
 }
 
 function segmentsWidth(segments: Segment[]): number {
-  return segments.reduce((sum, segment) => sum + visibleWidth(` ${segment.text} `) + 1, 0);
+  if (segments.length === 0) return 0;
+  return segments.reduce((sum, segment) => sum + visibleWidth(` ${segment.text} `), 0)
+    + (segments.length - 1) * visibleWidth(` ${STATUS_SEPARATOR} `);
 }
 
 function fitByPriority(segments: Segment[], width: number): Segment[] {
@@ -296,13 +292,13 @@ export default function vscodePowerline(pi: ExtensionAPI) {
           const activityBackground = activity === "ERROR" ? COLORS.red : activity === "READY" ? COLORS.greenDark : activity === "WAITING" ? COLORS.orange : COLORS.blue;
 
           const row1Left: Segment[] = [
-            { text: `${pulse} ${activity}${parallelCount}`, background: activityBackground, foreground: COLORS.white, bold: true, priority: Number.POSITIVE_INFINITY },
-            { text: `󰚩 ${truncateToWidth(model, 34, "…")}`, background: COLORS.purpleDark, foreground: COLORS.white, bold: true, priority: Number.POSITIVE_INFINITY },
-            { text: `󰒲 ${ctx.thinkingLevel ?? "off"}`, background: COLORS.thinkingBg, foreground: COLORS.surface, bold: true, priority: 4 },
-            { text: ` ${truncateMiddleLeft(displayPath(ctx.cwd), pathMax)}`, background: COLORS.pathTeal, foreground: COLORS.white, priority: 3 },
+            { text: `${pulse} ${activity}${parallelCount}`, background: COLORS.surface, foreground: activityBackground, bold: true, priority: Number.POSITIVE_INFINITY },
+            { text: `󰚩 ${truncateToWidth(model, 34, "…")}`, background: COLORS.surface, foreground: COLORS.text, priority: Number.POSITIVE_INFINITY },
+            { text: `󰒲 ${ctx.thinkingLevel ?? "off"}`, background: COLORS.surface, foreground: COLORS.thinking, priority: 4 },
+            { text: ` ${truncateMiddleLeft(displayPath(ctx.cwd), pathMax)}`, background: COLORS.surface, foreground: COLORS.muted, priority: 3 },
           ];
-          if (branch) row1Left.push({ text: ` ${sanitize(branch)}${dirty ? " 󰀨" : " 󰄬"}`, background: dirty ? COLORS.orange : COLORS.greenDark, foreground: COLORS.white, bold: dirty, priority: 2 });
-          if (statuses) row1Left.push({ text: `󰖟 ${statuses}`, background: COLORS.input, foreground: COLORS.yellow, priority: 1 });
+          if (branch) row1Left.push({ text: ` ${sanitize(branch)}${dirty ? " 󰀨" : " 󰄬"}`, background: COLORS.surface, foreground: dirty ? COLORS.warning : COLORS.success, bold: dirty, priority: 2 });
+          if (statuses) row1Left.push({ text: `󰖟 ${statuses}`, background: COLORS.surface, foreground: COLORS.warning, priority: 1 });
 
           let fittedLeft = fitByPriority(row1Left, width);
           let left = renderSegments(fittedLeft);
@@ -334,10 +330,10 @@ export default function vscodePowerline(pi: ExtensionAPI) {
           const autoOff = compactionEnabled(ctx.cwd, ctx.isProjectTrusted()) ? "" : " · 󰅙";
 
           const row2Segments: Segment[] = [
-            { text: `󰍛 ${foreground(meter, meterColor, COLORS.white)} ${contextValue}${autoOff}`, background: COLORS.contextBlue, foreground: COLORS.white, bold: true },
-            { text: ` ${compactNumber(totals.input)}   ${compactNumber(totals.output)}`, background: COLORS.pinkLight, foreground: COLORS.surface, bold: true, priority: 3 },
-            { text: `󰆼 ${compactNumber(totals.cacheRead)}   ${compactNumber(totals.cacheWrite)}  󰈸 ${hit}`, background: COLORS.purpleDark, foreground: COLORS.white, priority: 2 },
-            { text: `󰝑 ${formatCost(totals.cost)}`, background: COLORS.orange, foreground: COLORS.white, bold: true, priority: 1 },
+            { text: `󰍛 ${foreground(meter, meterColor, COLORS.text)} ${contextValue}${autoOff}`, background: COLORS.surface, foreground: COLORS.text, priority: Number.POSITIVE_INFINITY },
+            { text: ` ${compactNumber(totals.input)}   ${compactNumber(totals.output)}`, background: COLORS.surface, foreground: COLORS.muted, priority: 3 },
+            { text: `󰆼 ${compactNumber(totals.cacheRead)}   ${compactNumber(totals.cacheWrite)}  󰈸 ${hit}`, background: COLORS.surface, foreground: COLORS.muted, priority: 2 },
+            { text: `󰝑 ${formatCost(totals.cost)}`, background: COLORS.surface, foreground: COLORS.warning, priority: 1 },
           ];
 
           let fittedRow2 = fitByPriority(row2Segments, width);

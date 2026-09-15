@@ -1,12 +1,12 @@
 # pi-configs
 
-A curated [Pi](https://pi.dev) setup with an accurate VS Code Dark Modern/Dark+ theme, a dense two-row Powerline footer, GPT-5.6 Luna startup defaults, and six agent skills.
+A curated [Pi](https://pi.dev) setup with an accurate VS Code Dark Modern/Dark+ theme, a calm two-row footer, GPT-5.6 Luna startup defaults, and six agent skills.
 
 ## Preview
 
 ```text
-• 󰚩 THINKING  󰚩 gpt-5.6-luna  󰒲 high   ~/code/project   main 󰄬 
-󰍛 ████████████░░░░░░░░ 124k/272k (45.6%)   130k   8.2k  …
+• THINKING  │ 󰚩 gpt-5.6-luna  │ 󰒲 high  │   ~/code/project  │   main 󰄬
+󰍛 ████████████░░░░░░░░ 124k/272k (45.6%)  │   130k   8.2k  │  󰝑 $0.42
 ```
 
 Colors and spacing are rendered by Pi; the text preview is intentionally approximate.
@@ -15,9 +15,9 @@ Colors and spacing are rendered by Pi; the text preview is intentionally approxi
 
 - Official VS Code Dark Modern UI colors and Dark+ syntax colors
 - Terminal-adjusted contrast for borders and secondary text
-- Full-width, two-row Powerline footer with colorful semantic segments
+- Full-width, two-row footer with flat dark surfaces and subtle separators
 - Activity anchored at the far left, followed by model and high-contrast thinking level; provider hidden
-- Teal current-path segment, clean/dirty Git branch, and extension statuses
+- Muted current path, semantic Git branch state, and extension statuses
 - Visible `READY`, `THINKING`, `TOOLS`, `WAITING`, and `ERROR` activity labels
 - Tool-specific activity icons and parallel-tool count
 - Seam-free 20-cell context bar with solid-cell rendering
@@ -34,7 +34,7 @@ Colors and spacing are rendered by Pi; the text preview is intentionally approxi
 
 - Pi with extension and custom-theme support
 - Node.js 20 or newer
-- A Nerd Font with Powerline and Codicon glyphs
+- A Nerd Font with Codicon glyphs
 - A truecolor terminal is recommended
 
 ## Install
