@@ -1,0 +1,22 @@
+{
+  "name": "pi-configs",
+  "version": "1.0.0",
+  "private": true,
+  "description": "VS Code Dark Modern theme and Powerline footer for Pi",
+  "type": "module",
+  "scripts": {
+    "setup": "node setup.mjs",
+    "setup:link": "node setup.mjs --link",
+    "check": "node --check setup.mjs && node -e \"JSON.parse(require('node:fs').readFileSync('themes/vscode-dark-modern.json', 'utf8'))\" && tsc --noEmit"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "devDependencies": {
+    "@earendil-works/pi-coding-agent": "^0.85.1",
+    "@earendil-works/pi-tui": "^0.85.1",
+    "@types/node": "^22.19.19",
+    "typescript": "^5.9.3"
+  },
+  "license": "MIT"
+}
