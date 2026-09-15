@@ -72,6 +72,11 @@ async function installFile(source, destination) {
 
 async function updateSettings() {
   const settingsPath = join(configDir, "settings.json");
+  const desiredSettings = {
+    theme: "vscode-dark-modern",
+    defaultProvider: "openai-codex",
+    defaultModel: "gpt-5.6-luna",
+  };
   let settings = {};
   if (await exists(settingsPath)) {
     try {
@@ -80,17 +85,18 @@ async function updateSettings() {
       throw new Error(`Cannot parse ${settingsPath}: ${error.message}`);
     }
   }
-  if (settings.theme === "vscode-dark-modern") {
-    console.log(`keep     ${settingsPath} (theme already selected)`);
+  const changes = Object.entries(desiredSettings).filter(([key, value]) => settings[key] !== value);
+  if (changes.length === 0) {
+    console.log(`keep     ${settingsPath} (theme and model defaults already selected)`);
     return;
   }
-  console.log(`update   ${settingsPath} (theme = vscode-dark-modern)`);
+  console.log(`update   ${settingsPath} (${changes.map(([key, value]) => `${key} = ${value}`).join(", ")})`);
   if (dryRun) return;
   await mkdir(configDir, { recursive: true });
   if (await exists(settingsPath)) {
     await copyFile(settingsPath, `${settingsPath}.bak-${stamp}`);
   }
-  settings.theme = "vscode-dark-modern";
+  Object.assign(settings, desiredSettings);
   await writeFile(settingsPath, `${JSON.stringify(settings, null, 2)}\n`, "utf8");
 }
 

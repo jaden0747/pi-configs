@@ -1,12 +1,12 @@
 # pi-configs
 
-A VS Code Dark Modern makeover for [Pi](https://pi.dev): an accurate Dark Modern/Dark+ theme and a dense two-row Powerline footer.
+A colorful VS Code Dark Modern makeover for [Pi](https://pi.dev): an accurate Dark Modern/Dark+ theme, a dense two-row Powerline footer, and GPT-5.6 Luna startup defaults.
 
 ## Preview
 
 ```text
- ~/code/project   main ●   Refactor authentication                            gpt-5.4
-● THINKING   CTX ████████████░░░░░░░░ 124k/200k (62.0%)   IN 130k   OUT 8.2k  …
+󰚩 openai-codex gpt-5.6-luna   ~/code/project   main 󰄬  󰢻 Refactor authentication 
+• 󰚩 THINKING  󰍛 CTX ████████████░░░░░░░░ 124k/272k (45.6%)  󰋊 IN 130k  󰇚 OUT 8.2k  …
 ```
 
 Colors and spacing are rendered by Pi; the text preview is intentionally approximate.
@@ -15,10 +15,11 @@ Colors and spacing are rendered by Pi; the text preview is intentionally approxi
 
 - Official VS Code Dark Modern UI colors and Dark+ syntax colors
 - Terminal-adjusted contrast for borders and secondary text
-- Full-width, two-row Powerline footer
-- Path, dirty Git branch, session title, model, extension statuses
-- Live `READY`, `THINKING`, `TOOLS`, and `WAITING` activity states
-- Current tool name and parallel-tool count
+- Full-width, two-row Powerline footer with colorful semantic segments
+- Model and provider anchored at the far left of the first row
+- Path, clean/dirty Git branch, session title, and extension statuses
+- Icon-rich `READY`, `THINKING`, `TOOLS`, `WAITING`, and `ERROR` activity states
+- Tool-specific icons, current tool name, and parallel-tool count
 - 20-cell context bar with eighth-block precision
 - Context colors based on absolute usage:
   - green below 50k tokens
@@ -43,7 +44,7 @@ cd pi-configs
 node setup.mjs
 ```
 
-The installer copies files into `~/.pi/agent` (or `$PI_CODING_AGENT_DIR`) and safely merges the active theme into `settings.json`. Existing destination files and settings are timestamp-backed up.
+The installer copies files into `~/.pi/agent` (or `$PI_CODING_AGENT_DIR`) and safely merges the active theme plus the `openai-codex/gpt-5.6-luna` startup default into `settings.json`. Existing destination files and settings are timestamp-backed up.
 
 Restart Pi or run `/reload`.
 
@@ -70,7 +71,7 @@ node setup.mjs --link --dry-run
 │   └── vscode-powerline.ts
 ├── themes/
 │   └── vscode-dark-modern.json
-└── settings.json  # theme set to vscode-dark-modern
+└── settings.json  # theme and GPT-5.6 Luna startup defaults merged
 ```
 
 ## Notes

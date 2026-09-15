@@ -32,11 +32,15 @@ const COLORS = {
   amber: "#D7BA7D",
   red: "#F85149",
   cyan: "#4EC9B0",
+  orange: "#CE9178",
+  yellow: "#DCDCAA",
+  tealDark: "#0E5A53",
+  greenDark: "#1F6F3A",
+  purpleDark: "#4B3869",
 } as const;
 
 const RESET = "\x1b[0m";
 const POWERLINE_RIGHT = "";
-const POWERLINE_LEFT = "";
 const PULSE = ["·", "•", "●", "•"];
 const PARTIAL_BLOCKS = ["", "▏", "▎", "▍", "▌", "▋", "▊", "▉"];
 
@@ -210,6 +214,26 @@ function thinkingColor(level: string | undefined): string {
   }
 }
 
+function activityIcon(value: Activity): string {
+  switch (value) {
+    case "READY": return "󰄬";
+    case "THINKING": return "󰚩";
+    case "TOOLS": return "󰏗";
+    case "WAITING": return "󰥔";
+    case "ERROR": return "󰅚";
+  }
+}
+
+function toolIcon(name: string): string {
+  switch (name.toLowerCase()) {
+    case "bash": return "";
+    case "read": return "";
+    case "edit": return "󰏫";
+    case "write": return "";
+    default: return "󰏗";
+  }
+}
+
 export default function vscodePowerline(pi: ExtensionAPI) {
   let activity: Activity = "READY";
   let previousActivity: Activity = "READY";
@@ -287,34 +311,32 @@ export default function vscodePowerline(pi: ExtensionAPI) {
           const branch = footerData.getGitBranch();
           const sessionName = sanitize(ctx.sessionManager.getSessionName() ?? firstUserPrompt(ctx));
           const model = sanitize(ctx.model?.id ?? "no-model");
+          const provider = sanitize(ctx.model?.provider ?? "model");
           const statuses = [...footerData.getExtensionStatuses().entries()]
             .filter(([key]) => key !== "vscode-powerline")
             .sort(([left], [right]) => left.localeCompare(right))
             .map(([, value]) => sanitize(value))
             .filter(Boolean)
-            .join(" ");
+            .join("  ");
 
           const row1Left: Segment[] = [
-            { text: ` ${truncateMiddleLeft(displayPath(ctx.cwd), pathMax)}`, background: COLORS.editor, priority: Number.POSITIVE_INFINITY },
+            { text: `󰚩 ${provider} ${truncateToWidth(model, 34, "…")}`, background: COLORS.purpleDark, foreground: COLORS.white, bold: true, priority: Number.POSITIVE_INFINITY },
+            { text: ` ${truncateMiddleLeft(displayPath(ctx.cwd), pathMax)}`, background: COLORS.blue, foreground: COLORS.white, priority: Number.POSITIVE_INFINITY },
           ];
-          if (branch) row1Left.push({ text: ` ${sanitize(branch)}${dirty ? " ●" : ""}`, background: COLORS.input, foreground: dirty ? COLORS.amber : COLORS.text, priority: Number.POSITIVE_INFINITY });
-          row1Left.push({ text: ` ${truncateToWidth(sessionName, sessionMax, "…")}`, background: COLORS.raised, priority: 2 });
-          if (statuses) row1Left.push({ text: statuses, background: COLORS.input, foreground: COLORS.muted, priority: 1 });
+          if (branch) row1Left.push({ text: ` ${sanitize(branch)}${dirty ? " 󰀨" : " 󰄬"}`, background: dirty ? COLORS.orange : COLORS.greenDark, foreground: COLORS.white, bold: dirty, priority: Number.POSITIVE_INFINITY });
+          row1Left.push({ text: `󰢻 ${truncateToWidth(sessionName, sessionMax, "…")}`, background: COLORS.tealDark, foreground: COLORS.white, priority: 2 });
+          if (statuses) row1Left.push({ text: `󰖟 ${statuses}`, background: COLORS.input, foreground: COLORS.yellow, priority: 1 });
 
-          const modelSegment: Segment = { text: ` ${truncateToWidth(model, 36, "…")}`, background: COLORS.blue, foreground: COLORS.white, bold: true };
-          const modelWidth = visibleWidth(` ${modelSegment.text} `) + 1;
-          let fittedLeft = fitByPriority(row1Left, Math.max(1, width - modelWidth - 1));
+          let fittedLeft = fitByPriority(row1Left, width);
           let left = renderSegments(fittedLeft);
           let leftWidth = visibleWidth(left);
-          const right = style(POWERLINE_LEFT, modelSegment.background, COLORS.surface) + style(` ${modelSegment.text} `, modelSegment.foreground!, modelSegment.background, true);
-          const rightWidth = visibleWidth(right);
-          if (leftWidth + rightWidth > width) {
+          if (leftWidth > width) {
             fittedLeft = fittedLeft.slice(0, 1);
-            fittedLeft[0] = { ...fittedLeft[0]!, text: truncateToWidth(fittedLeft[0]!.text, Math.max(4, width - rightWidth - 2), "…") };
+            fittedLeft[0] = { ...fittedLeft[0]!, text: truncateToWidth(fittedLeft[0]!.text, Math.max(4, width - 2), "…") };
             left = renderSegments(fittedLeft);
             leftWidth = visibleWidth(left);
           }
-          const row1 = fill(left + " ".repeat(Math.max(0, width - leftWidth - rightWidth)) + right);
+          const row1 = fill(left + " ".repeat(Math.max(0, width - leftWidth)));
 
           const totals = collectTotals(ctx);
           const context = ctx.getContextUsage();
@@ -324,23 +346,24 @@ export default function vscodePowerline(pi: ExtensionAPI) {
           const meterColor = contextColor(used);
           const meter = contextBar(used, maximum);
           const contextValue = `${used === null ? "?" : compactNumber(used)}/${compactNumber(maximum)} (${percent === null ? "?" : `${percent.toFixed(1)}%`})`;
-          const pulse = activity === "READY" || activity === "ERROR" ? (activity === "ERROR" ? "!" : "●") : PULSE[pulseFrame]!;
-          let activityLabel = activity;
+          const pulse = activity === "READY" || activity === "ERROR" ? activityIcon(activity) : `${PULSE[pulseFrame]} ${activityIcon(activity)}`;
+          let activityLabel: string = activity;
           if (activity === "TOOLS" && activeTools.size > 0) {
-            const current = [...activeTools.values()].at(-1)!.toUpperCase();
-            activityLabel = `${current}${activeTools.size > 1 ? ` +${activeTools.size - 1}` : ""}` as Activity;
+            const currentTool = [...activeTools.values()].at(-1)!;
+            const current = `${toolIcon(currentTool)} ${currentTool.toUpperCase()}`;
+            activityLabel = `${current}${activeTools.size > 1 ? ` +${activeTools.size - 1}` : ""}`;
           }
-          const activityBackground = activity === "ERROR" ? COLORS.red : activity === "READY" ? COLORS.input : COLORS.blue;
+          const activityBackground = activity === "ERROR" ? COLORS.red : activity === "READY" ? COLORS.greenDark : activity === "WAITING" ? COLORS.orange : COLORS.blue;
           const hit = totals.latestCacheHit === undefined ? "—" : `${totals.latestCacheHit.toFixed(1)}%`;
-          const autoOff = compactionEnabled(ctx.cwd, ctx.isProjectTrusted()) ? "" : " · AUTO OFF";
+          const autoOff = compactionEnabled(ctx.cwd, ctx.isProjectTrusted()) ? "" : " · 󰅙 AUTO OFF";
 
           const row2Segments: Segment[] = [
             { text: `${pulse} ${activityLabel}`, background: activityBackground, foreground: COLORS.white, bold: true },
-            { text: ` CTX ${foreground(meter, meterColor)} ${contextValue}${autoOff}`, background: COLORS.editor, foreground: COLORS.text },
-            { text: ` IN ${compactNumber(totals.input)}   OUT ${compactNumber(totals.output)}`, background: COLORS.input, priority: 3 },
-            { text: ` READ ${compactNumber(totals.cacheRead)} · WRITE ${compactNumber(totals.cacheWrite)}   HIT ${hit}`, background: COLORS.raised, priority: 2 },
-            { text: ` COST ${formatCost(totals.cost)}`, background: COLORS.input, priority: 1 },
-            { text: ` THINK ${ctx.thinkingLevel ?? "off"}`, background: COLORS.raised, foreground: thinkingColor(ctx.thinkingLevel), bold: true, priority: 4 },
+            { text: `󰍛 CTX ${foreground(meter, meterColor)} ${contextValue}${autoOff}`, background: COLORS.editor, foreground: COLORS.text },
+            { text: `󰋊 IN ${compactNumber(totals.input)}  󰇚 OUT ${compactNumber(totals.output)}`, background: COLORS.tealDark, foreground: COLORS.white, priority: 3 },
+            { text: `󰆼 CACHE ${compactNumber(totals.cacheRead)}   ${compactNumber(totals.cacheWrite)}  󰈸 HIT ${hit}`, background: COLORS.purpleDark, foreground: COLORS.white, priority: 2 },
+            { text: `󰝑 COST ${formatCost(totals.cost)}`, background: COLORS.orange, foreground: COLORS.white, bold: true, priority: 1 },
+            { text: `󰒲 THINK ${ctx.thinkingLevel ?? "off"}`, background: COLORS.input, foreground: thinkingColor(ctx.thinkingLevel), bold: true, priority: 4 },
           ];
 
           let fittedRow2 = fitByPriority(row2Segments, width);
