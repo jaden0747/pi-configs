@@ -24,6 +24,7 @@ const COLORS = {
   input: "#313131",
   blue: "#0078D4",
   blueBright: "#4DAAFC",
+  contextBlue: "#264F78",
   text: "#CCCCCC",
   white: "#FFFFFF",
   muted: "#A7A7A7",
@@ -58,7 +59,7 @@ function fill(text: string, background = COLORS.surface): string {
   return `\x1b[48;2;${rgb(background)}m${text}${RESET}`;
 }
 
-function foreground(text: string, color: string, restore = COLORS.text): string {
+function foreground(text: string, color: string, restore: string = COLORS.text): string {
   return `\x1b[38;2;${rgb(color)}m${text}\x1b[38;2;${rgb(restore)}m`;
 }
 
@@ -359,8 +360,8 @@ export default function vscodePowerline(pi: ExtensionAPI) {
 
           const row2Segments: Segment[] = [
             { text: `${pulse} ${activityLabel}`, background: activityBackground, foreground: COLORS.white, bold: true },
-            { text: `󰍛 CTX ${foreground(meter, meterColor)} ${contextValue}${autoOff}`, background: COLORS.editor, foreground: COLORS.text },
-            { text: ` IN ${compactNumber(totals.input)}  󰇚 OUT ${compactNumber(totals.output)}`, background: COLORS.pinkLight, foreground: COLORS.surface, bold: true, priority: 3 },
+            { text: `󰍛 CTX ${foreground(meter, meterColor, COLORS.white)} ${contextValue}${autoOff}`, background: COLORS.contextBlue, foreground: COLORS.white, bold: true },
+            { text: ` IN ${compactNumber(totals.input)}   OUT ${compactNumber(totals.output)}`, background: COLORS.pinkLight, foreground: COLORS.surface, bold: true, priority: 3 },
             { text: `󰆼 CACHE ${compactNumber(totals.cacheRead)}   ${compactNumber(totals.cacheWrite)}  󰈸 HIT ${hit}`, background: COLORS.purpleDark, foreground: COLORS.white, priority: 2 },
             { text: `󰝑 COST ${formatCost(totals.cost)}`, background: COLORS.orange, foreground: COLORS.white, bold: true, priority: 1 },
             { text: `󰒲 THINK ${ctx.thinkingLevel ?? "off"}`, background: COLORS.input, foreground: thinkingColor(ctx.thinkingLevel), bold: true, priority: 4 },
