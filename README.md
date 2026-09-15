@@ -5,7 +5,7 @@ A colorful VS Code Dark Modern makeover for [Pi](https://pi.dev): an accurate Da
 ## Preview
 
 ```text
-󰚩 openai-codex gpt-5.6-luna   ~/code/project   main 󰄬  󰢻 Refactor authentication 
+󰚩 gpt-5.6-luna   ~/code/project   main 󰄬  󰢻 Refactor authentication 
 • 󰚩 THINKING  󰍛 CTX ████████████░░░░░░░░ 124k/272k (45.6%)  󰋊 IN 130k  󰇚 OUT 8.2k  …
 ```
 
@@ -16,7 +16,7 @@ Colors and spacing are rendered by Pi; the text preview is intentionally approxi
 - Official VS Code Dark Modern UI colors and Dark+ syntax colors
 - Terminal-adjusted contrast for borders and secondary text
 - Full-width, two-row Powerline footer with colorful semantic segments
-- Model and provider anchored at the far left of the first row
+- Model anchored at the far left of the first row, with provider hidden
 - Path, clean/dirty Git branch, session title, and extension statuses
 - Icon-rich `READY`, `THINKING`, `TOOLS`, `WAITING`, and `ERROR` activity states
 - Tool-specific icons, current tool name, and parallel-tool count

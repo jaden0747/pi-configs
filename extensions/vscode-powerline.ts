@@ -311,7 +311,6 @@ export default function vscodePowerline(pi: ExtensionAPI) {
           const branch = footerData.getGitBranch();
           const sessionName = sanitize(ctx.sessionManager.getSessionName() ?? firstUserPrompt(ctx));
           const model = sanitize(ctx.model?.id ?? "no-model");
-          const provider = sanitize(ctx.model?.provider ?? "model");
           const statuses = [...footerData.getExtensionStatuses().entries()]
             .filter(([key]) => key !== "vscode-powerline")
             .sort(([left], [right]) => left.localeCompare(right))
@@ -320,7 +319,7 @@ export default function vscodePowerline(pi: ExtensionAPI) {
             .join("  ");
 
           const row1Left: Segment[] = [
-            { text: `󰚩 ${provider} ${truncateToWidth(model, 34, "…")}`, background: COLORS.purpleDark, foreground: COLORS.white, bold: true, priority: Number.POSITIVE_INFINITY },
+            { text: `󰚩 ${truncateToWidth(model, 34, "…")}`, background: COLORS.purpleDark, foreground: COLORS.white, bold: true, priority: Number.POSITIVE_INFINITY },
             { text: ` ${truncateMiddleLeft(displayPath(ctx.cwd), pathMax)}`, background: COLORS.blue, foreground: COLORS.white, priority: Number.POSITIVE_INFINITY },
           ];
           if (branch) row1Left.push({ text: ` ${sanitize(branch)}${dirty ? " 󰀨" : " 󰄬"}`, background: dirty ? COLORS.orange : COLORS.greenDark, foreground: COLORS.white, bold: dirty, priority: Number.POSITIVE_INFINITY });
