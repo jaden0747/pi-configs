@@ -22,29 +22,28 @@ const COLORS = {
   editor: "#1F1F1F",
   raised: "#252526",
   input: "#313131",
-  blue: "#569CD6",
+  blue: "#75BEFF",
   contextBlue: "#264F78",
-  text: "#CCCCCC",
+  text: "#F0F0F0",
   white: "#FFFFFF",
-  muted: "#A7A7A7",
-  dim: "#868686",
-  green: "#4EC9B0",
-  amber: "#D7BA7D",
-  red: "#F14C4C",
-  orange: "#CE9178",
-  success: "#6A9955",
-  warning: "#D7BA7D",
-  thinking: "#C586C0",
-  pinkLight: "#E9A6C3",
-  yellow: "#DCDCAA",
-  pathTeal: "#0E6B6B",
-  greenDark: "#6A9955",
-  purpleDark: "#4B3869",
-  thinkingBg: "#C586C0",
+  muted: "#D4D4D4",
+  dim: "#B8B8B8",
+  green: "#65E6C1",
+  amber: "#FFD580",
+  red: "#FF6B6B",
+  orange: "#FFB86C",
+  success: "#7EE787",
+  warning: "#FFD580",
+  thinking: "#E2A8FF",
+  thinkingEffort: "#FF7A9E",
+  pinkLight: "#FFB6D9",
+  yellow: "#FFF59D",
+  pathTeal: "#5DE2E7",
+  folder: "#CCCCCC",
+  purpleDark: "#C9A0FF",
 } as const;
 
 const RESET = "\x1b[0m";
-const STATUS_SEPARATOR = "│";
 const PULSE = ["·", "•", "●", "•"];
 
 function rgb(hex: string): string {
@@ -146,13 +145,12 @@ function renderSegments(segments: Segment[]): string {
   if (segments.length === 0) return "";
   return segments
     .map((segment) => style(` ${segment.text} `, segment.foreground ?? COLORS.text, COLORS.surface, segment.bold))
-    .join(foreground(` ${STATUS_SEPARATOR} `, COLORS.dim, COLORS.surface));
+    .join("");
 }
 
 function segmentsWidth(segments: Segment[]): number {
   if (segments.length === 0) return 0;
-  return segments.reduce((sum, segment) => sum + visibleWidth(` ${segment.text} `), 0)
-    + (segments.length - 1) * visibleWidth(` ${STATUS_SEPARATOR} `);
+  return segments.reduce((sum, segment) => sum + visibleWidth(` ${segment.text} `), 0);
 }
 
 function fitByPriority(segments: Segment[], width: number): Segment[] {
@@ -289,34 +287,39 @@ export default function vscodePowerline(pi: ExtensionAPI) {
             : activityIcon(activity);
           const pulse = activity === "READY" || activity === "ERROR" ? stateIcon : `${PULSE[pulseFrame]} ${stateIcon}`;
           const parallelCount = activity === "TOOLS" && activeTools.size > 1 ? ` +${activeTools.size - 1}` : "";
-          const activityBackground = activity === "ERROR" ? COLORS.red : activity === "READY" ? COLORS.greenDark : activity === "WAITING" ? COLORS.orange : COLORS.blue;
+          const activityForeground = activity === "ERROR" ? COLORS.red : activity === "READY" ? COLORS.green : activity === "WAITING" ? COLORS.orange : COLORS.blue;
 
+          const activitySegment: Segment = {
+            text: `${pulse} ${activity}${parallelCount}`,
+            background: COLORS.surface,
+            foreground: activityForeground,
+            bold: true,
+            priority: Number.POSITIVE_INFINITY,
+          };
           const row1Left: Segment[] = [
-            { text: `${pulse} ${activity}${parallelCount}`, background: COLORS.surface, foreground: activityBackground, bold: true, priority: Number.POSITIVE_INFINITY },
-            { text: `󰚩 ${truncateToWidth(model, 34, "…")}`, background: COLORS.surface, foreground: COLORS.text, priority: Number.POSITIVE_INFINITY },
-            { text: `󰒲 ${ctx.thinkingLevel ?? "off"}`, background: COLORS.surface, foreground: COLORS.thinking, priority: 4 },
-            { text: ` ${truncateMiddleLeft(displayPath(ctx.cwd), pathMax)}`, background: COLORS.surface, foreground: COLORS.muted, priority: 3 },
+            { text: ` ${truncateMiddleLeft(displayPath(ctx.cwd), pathMax)}`, background: COLORS.surface, foreground: COLORS.folder, priority: 3 },
           ];
           if (branch) row1Left.push({ text: ` ${sanitize(branch)}${dirty ? " 󰀨" : " 󰄬"}`, background: COLORS.surface, foreground: dirty ? COLORS.warning : COLORS.success, bold: dirty, priority: 2 });
           if (statuses) row1Left.push({ text: `󰖟 ${statuses}`, background: COLORS.surface, foreground: COLORS.warning, priority: 1 });
 
-          let fittedLeft = fitByPriority(row1Left, width);
+          const activityWidth = segmentsWidth([activitySegment]);
+          const separatorWidth = 1;
+          const leftAvailable = Math.max(1, width - activityWidth - separatorWidth);
+          let fittedLeft = fitByPriority(row1Left, leftAvailable);
           let left = renderSegments(fittedLeft);
           let leftWidth = visibleWidth(left);
-          if (leftWidth > width) {
-            const activityWidth = segmentsWidth([fittedLeft[0]!]);
-            if (fittedLeft.length > 1 && width > activityWidth + 4) {
-              fittedLeft = [
-                fittedLeft[0]!,
-                { ...fittedLeft[1]!, text: truncateToWidth(fittedLeft[1]!.text, width - activityWidth - 3, "…") },
-              ];
-            } else {
-              fittedLeft = [{ ...fittedLeft[0]!, text: truncateToWidth(fittedLeft[0]!.text, Math.max(1, width - 3), "…") }];
-            }
+          if (leftWidth > leftAvailable) {
+            fittedLeft = fittedLeft.length > 0
+              ? [{ ...fittedLeft[0]!, text: truncateToWidth(fittedLeft[0]!.text, Math.max(1, leftAvailable - 2), "…") }]
+              : [];
             left = renderSegments(fittedLeft);
             leftWidth = visibleWidth(left);
           }
-          const row1 = fill(left + " ".repeat(Math.max(0, width - leftWidth)));
+          const renderedActivity = renderSegments([activitySegment]);
+          const row1Content = left
+            ? left + " " + renderedActivity
+            : renderedActivity;
+          const row1 = fill(row1Content + " ".repeat(Math.max(0, width - visibleWidth(row1Content))));
 
           const totals = collectTotals(ctx);
           const context = ctx.getContextUsage();
@@ -330,10 +333,12 @@ export default function vscodePowerline(pi: ExtensionAPI) {
           const autoOff = compactionEnabled(ctx.cwd, ctx.isProjectTrusted()) ? "" : " · 󰅙";
 
           const row2Segments: Segment[] = [
-            { text: `󰍛 ${foreground(meter, meterColor, COLORS.text)} ${contextValue}${autoOff}`, background: COLORS.surface, foreground: COLORS.text, priority: Number.POSITIVE_INFINITY },
-            { text: ` ${compactNumber(totals.input)}   ${compactNumber(totals.output)}`, background: COLORS.surface, foreground: COLORS.muted, priority: 3 },
-            { text: `󰆼 ${compactNumber(totals.cacheRead)}   ${compactNumber(totals.cacheWrite)}  󰈸 ${hit}`, background: COLORS.surface, foreground: COLORS.muted, priority: 2 },
-            { text: `󰝑 ${formatCost(totals.cost)}`, background: COLORS.surface, foreground: COLORS.warning, priority: 1 },
+            { text: `󰚩 ${truncateToWidth(model, 34, "…")}`, background: COLORS.surface, foreground: COLORS.yellow, priority: Number.POSITIVE_INFINITY },
+            { text: `󰧑 ${ctx.thinkingLevel ?? "off"}`, background: COLORS.surface, foreground: COLORS.thinkingEffort, priority: 4 },
+            { text: `󰍛 ${meter} ${contextValue}${autoOff}`, background: COLORS.surface, foreground: meterColor, priority: Number.POSITIVE_INFINITY },
+            { text: ` ${compactNumber(totals.input)}   ${compactNumber(totals.output)}`, background: COLORS.surface, foreground: COLORS.orange, priority: 3 },
+            { text: `󰆼 ${compactNumber(totals.cacheRead)}   ${compactNumber(totals.cacheWrite)}  󰈸 ${hit}`, background: COLORS.surface, foreground: COLORS.thinking, priority: 2 },
+            { text: `󰄔 ${formatCost(totals.cost)}`,  background: COLORS.surface, foreground: COLORS.warning, priority: 1 },
           ];
 
           let fittedRow2 = fitByPriority(row2Segments, width);
