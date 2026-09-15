@@ -34,7 +34,7 @@ const COLORS = {
   orange: "#CE9178",
   pinkLight: "#E9A6C3",
   yellow: "#DCDCAA",
-  tealDark: "#0E5A53",
+  pathTeal: "#0E6B6B",
   greenDark: "#1F6F3A",
   purpleDark: "#4B3869",
   thinkingBg: "#C586C0",
@@ -101,30 +101,6 @@ function truncateMiddleLeft(text: string, width: number): string {
   if (visibleWidth(text) <= width) return text;
   if (width <= 1) return "…";
   return `…${text.slice(-(width - 1))}`;
-}
-
-function summarizePrompt(text: string, maximumWords = 8): string {
-  const clean = sanitize(text)
-    .replace(/^(?:please|pls)\s+/i, "")
-    .replace(/^(?:can|could|would|will)\s+you\s+/i, "")
-    .replace(/^i\s+(?:want|need|would like)\s+(?:you\s+)?to\s+/i, "");
-  const firstThought = clean.split(/(?:[.!?;]|\s+(?:moreover|also|then)\s*,?)/i, 1)[0]?.trim() ?? "";
-  const words = firstThought.split(/\s+/).filter(Boolean);
-  if (words.length === 0) return "new session";
-  const summary = words.slice(0, maximumWords).join(" ").replace(/[,.:;!?]+$/, "");
-  return words.length > maximumWords ? `${summary}…` : summary;
-}
-
-function firstPromptSummary(ctx: ExtensionContext): string {
-  for (const entry of ctx.sessionManager.getBranch()) {
-    if (entry.type !== "message" || entry.message.role !== "user") continue;
-    const content = entry.message.content;
-    const text = typeof content === "string"
-      ? content
-      : (content as any[]).filter((part) => part.type === "text").map((part) => part.text ?? "").join(" ");
-    if (sanitize(text)) return summarizePrompt(text);
-  }
-  return "new session";
 }
 
 function collectTotals(ctx: ExtensionContext): Totals {
@@ -306,10 +282,8 @@ export default function vscodePowerline(pi: ExtensionAPI) {
         },
         render(width: number): string[] {
           const wide = width >= 200;
-          const sessionMax = wide ? 48 : 24;
           const pathMax = wide ? 72 : 36;
           const branch = footerData.getGitBranch();
-          const sessionName = sanitize(ctx.sessionManager.getSessionName() ?? firstPromptSummary(ctx));
           const model = sanitize(ctx.model?.id ?? "no-model");
           const statuses = [...footerData.getExtensionStatuses().entries()]
             .filter(([key]) => key !== "vscode-powerline")
@@ -321,10 +295,9 @@ export default function vscodePowerline(pi: ExtensionAPI) {
           const row1Left: Segment[] = [
             { text: `󰚩 ${truncateToWidth(model, 34, "…")}`, background: COLORS.purpleDark, foreground: COLORS.white, bold: true, priority: Number.POSITIVE_INFINITY },
             { text: `󰒲 THINK ${ctx.thinkingLevel ?? "off"}`, background: COLORS.thinkingBg, foreground: COLORS.surface, bold: true, priority: Number.POSITIVE_INFINITY },
-            { text: ` ${truncateMiddleLeft(displayPath(ctx.cwd), pathMax)}`, background: COLORS.blue, foreground: COLORS.white, priority: Number.POSITIVE_INFINITY },
+            { text: ` ${truncateMiddleLeft(displayPath(ctx.cwd), pathMax)}`, background: COLORS.pathTeal, foreground: COLORS.white, priority: Number.POSITIVE_INFINITY },
           ];
           if (branch) row1Left.push({ text: ` ${sanitize(branch)}${dirty ? " 󰀨" : " 󰄬"}`, background: dirty ? COLORS.orange : COLORS.greenDark, foreground: COLORS.white, bold: dirty, priority: Number.POSITIVE_INFINITY });
-          row1Left.push({ text: `󰢻 ${truncateToWidth(sessionName, sessionMax, "…")}`, background: COLORS.tealDark, foreground: COLORS.white, priority: 2 });
           if (statuses) row1Left.push({ text: `󰖟 ${statuses}`, background: COLORS.input, foreground: COLORS.yellow, priority: 1 });
 
           let fittedLeft = fitByPriority(row1Left, width);
