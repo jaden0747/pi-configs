@@ -35,7 +35,12 @@ const COLORS = {
   success: "#7EE787",
   warning: "#FFD580",
   thinking: "#E2A8FF",
-  thinkingEffort: "#FF7A9E",
+  thinkingOff: "#868686",
+  thinkingMinimal: "#0078D4",
+  thinkingLow: "#4DAAFC",
+  thinkingMedium: "#4EC9B0",
+  thinkingHigh: "#D7BA7D",
+  thinkingXhigh: "#F85149",
   pinkLight: "#FFB6D9",
   yellow: "#FFF59D",
   pathTeal: "#5DE2E7",
@@ -132,6 +137,18 @@ function contextColor(tokens: number | null): string {
   if (tokens < 50_000) return COLORS.green;
   if (tokens <= 150_000) return COLORS.amber;
   return COLORS.red;
+}
+
+function thinkingColor(level: string | undefined): string {
+  switch ((level ?? "off").toLowerCase()) {
+    case "minimal": return COLORS.thinkingMinimal;
+    case "low": return COLORS.thinkingLow;
+    case "medium": return COLORS.thinkingMedium;
+    case "high": return COLORS.thinkingHigh;
+    case "xhigh":
+    case "max": return COLORS.thinkingXhigh;
+    default: return COLORS.thinkingOff;
+  }
 }
 
 function contextBar(tokens: number | null, maximum: number, cells = 20): string {
@@ -334,7 +351,7 @@ export default function vscodePowerline(pi: ExtensionAPI) {
 
           const row2Segments: Segment[] = [
             { text: `󰚩 ${truncateToWidth(model, 34, "…")}`, background: COLORS.surface, foreground: COLORS.yellow, priority: Number.POSITIVE_INFINITY },
-            { text: `󰧑 ${ctx.thinkingLevel ?? "off"}`, background: COLORS.surface, foreground: COLORS.thinkingEffort, priority: 4 },
+            { text: `󰧑 ${ctx.thinkingLevel ?? "off"}`, background: COLORS.surface, foreground: thinkingColor(ctx.thinkingLevel), priority: 4 },
             { text: `󰍛 ${meter} ${contextValue}${autoOff}`, background: COLORS.surface, foreground: meterColor, priority: Number.POSITIVE_INFINITY },
             { text: ` ${compactNumber(totals.input)}   ${compactNumber(totals.output)}`, background: COLORS.surface, foreground: COLORS.orange, priority: 3 },
             { text: `󰆼 ${compactNumber(totals.cacheRead)}   ${compactNumber(totals.cacheWrite)}  󰈸 ${hit}`, background: COLORS.surface, foreground: COLORS.thinking, priority: 2 },
