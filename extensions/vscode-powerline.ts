@@ -290,7 +290,7 @@ export default function vscodePowerline(pi: ExtensionAPI) {
 
           const row1Left: Segment[] = [
             { text: `󰚩 ${truncateToWidth(model, 34, "…")}`, background: COLORS.purpleDark, foreground: COLORS.white, bold: true, priority: Number.POSITIVE_INFINITY },
-            { text: `󰒲 THINK ${ctx.thinkingLevel ?? "off"}`, background: COLORS.thinkingBg, foreground: COLORS.surface, bold: true, priority: Number.POSITIVE_INFINITY },
+            { text: `󰒲 ${ctx.thinkingLevel ?? "off"}`, background: COLORS.thinkingBg, foreground: COLORS.surface, bold: true, priority: Number.POSITIVE_INFINITY },
             { text: ` ${truncateMiddleLeft(displayPath(ctx.cwd), pathMax)}`, background: COLORS.pathTeal, foreground: COLORS.white, priority: Number.POSITIVE_INFINITY },
           ];
           if (branch) row1Left.push({ text: ` ${sanitize(branch)}${dirty ? " 󰀨" : " 󰄬"}`, background: dirty ? COLORS.orange : COLORS.greenDark, foreground: COLORS.white, bold: dirty, priority: Number.POSITIVE_INFINITY });
@@ -315,23 +315,21 @@ export default function vscodePowerline(pi: ExtensionAPI) {
           const meterColor = contextColor(used);
           const meter = contextBar(used, maximum);
           const contextValue = `${used === null ? "?" : compactNumber(used)}/${compactNumber(maximum)} (${percent === null ? "?" : `${percent.toFixed(1)}%`})`;
-          const pulse = activity === "READY" || activity === "ERROR" ? activityIcon(activity) : `${PULSE[pulseFrame]} ${activityIcon(activity)}`;
-          let activityLabel: string = activity;
-          if (activity === "TOOLS" && activeTools.size > 0) {
-            const currentTool = [...activeTools.values()].at(-1)!;
-            const current = `${toolIcon(currentTool)} ${currentTool.toUpperCase()}`;
-            activityLabel = `${current}${activeTools.size > 1 ? ` +${activeTools.size - 1}` : ""}`;
-          }
+          const stateIcon = activity === "TOOLS" && activeTools.size > 0
+            ? toolIcon([...activeTools.values()].at(-1)!)
+            : activityIcon(activity);
+          const pulse = activity === "READY" || activity === "ERROR" ? stateIcon : `${PULSE[pulseFrame]} ${stateIcon}`;
+          const parallelCount = activity === "TOOLS" && activeTools.size > 1 ? ` +${activeTools.size - 1}` : "";
           const activityBackground = activity === "ERROR" ? COLORS.red : activity === "READY" ? COLORS.greenDark : activity === "WAITING" ? COLORS.orange : COLORS.blue;
           const hit = totals.latestCacheHit === undefined ? "—" : `${totals.latestCacheHit.toFixed(1)}%`;
-          const autoOff = compactionEnabled(ctx.cwd, ctx.isProjectTrusted()) ? "" : " · 󰅙 AUTO OFF";
+          const autoOff = compactionEnabled(ctx.cwd, ctx.isProjectTrusted()) ? "" : " · 󰅙";
 
           const row2Segments: Segment[] = [
-            { text: `${pulse} ${activityLabel}`, background: activityBackground, foreground: COLORS.white, bold: true },
-            { text: `󰍛 CTX ${foreground(meter, meterColor, COLORS.white)} ${contextValue}${autoOff}`, background: COLORS.contextBlue, foreground: COLORS.white, bold: true },
-            { text: ` IN ${compactNumber(totals.input)}   OUT ${compactNumber(totals.output)}`, background: COLORS.pinkLight, foreground: COLORS.surface, bold: true, priority: 3 },
-            { text: `󰆼 CACHE ${compactNumber(totals.cacheRead)}   ${compactNumber(totals.cacheWrite)}  󰈸 HIT ${hit}`, background: COLORS.purpleDark, foreground: COLORS.white, priority: 2 },
-            { text: `󰝑 COST ${formatCost(totals.cost)}`, background: COLORS.orange, foreground: COLORS.white, bold: true, priority: 1 },
+            { text: `${pulse}${parallelCount}`, background: activityBackground, foreground: COLORS.white, bold: true },
+            { text: `󰍛 ${foreground(meter, meterColor, COLORS.white)} ${contextValue}${autoOff}`, background: COLORS.contextBlue, foreground: COLORS.white, bold: true },
+            { text: ` ${compactNumber(totals.input)}   ${compactNumber(totals.output)}`, background: COLORS.pinkLight, foreground: COLORS.surface, bold: true, priority: 3 },
+            { text: `󰆼 ${compactNumber(totals.cacheRead)}   ${compactNumber(totals.cacheWrite)}  󰈸 ${hit}`, background: COLORS.purpleDark, foreground: COLORS.white, priority: 2 },
+            { text: `󰝑 ${formatCost(totals.cost)}`, background: COLORS.orange, foreground: COLORS.white, bold: true, priority: 1 },
           ];
 
           let fittedRow2 = fitByPriority(row2Segments, width);
