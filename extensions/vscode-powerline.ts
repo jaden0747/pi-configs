@@ -33,6 +33,7 @@ const COLORS = {
   red: "#F85149",
   cyan: "#4EC9B0",
   orange: "#CE9178",
+  pinkLight: "#E9A6C3",
   yellow: "#DCDCAA",
   tealDark: "#0E5A53",
   greenDark: "#1F6F3A",
@@ -359,7 +360,7 @@ export default function vscodePowerline(pi: ExtensionAPI) {
           const row2Segments: Segment[] = [
             { text: `${pulse} ${activityLabel}`, background: activityBackground, foreground: COLORS.white, bold: true },
             { text: `󰍛 CTX ${foreground(meter, meterColor)} ${contextValue}${autoOff}`, background: COLORS.editor, foreground: COLORS.text },
-            { text: `󰋊 IN ${compactNumber(totals.input)}  󰇚 OUT ${compactNumber(totals.output)}`, background: COLORS.tealDark, foreground: COLORS.white, priority: 3 },
+            { text: ` IN ${compactNumber(totals.input)}  󰇚 OUT ${compactNumber(totals.output)}`, background: COLORS.pinkLight, foreground: COLORS.surface, bold: true, priority: 3 },
             { text: `󰆼 CACHE ${compactNumber(totals.cacheRead)}   ${compactNumber(totals.cacheWrite)}  󰈸 HIT ${hit}`, background: COLORS.purpleDark, foreground: COLORS.white, priority: 2 },
             { text: `󰝑 COST ${formatCost(totals.cost)}`, background: COLORS.orange, foreground: COLORS.white, bold: true, priority: 1 },
             { text: `󰒲 THINK ${ctx.thinkingLevel ?? "off"}`, background: COLORS.input, foreground: thinkingColor(ctx.thinkingLevel), bold: true, priority: 4 },

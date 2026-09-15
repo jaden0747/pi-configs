@@ -6,7 +6,7 @@ A colorful VS Code Dark Modern makeover for [Pi](https://pi.dev): an accurate Da
 
 ```text
 󰚩 gpt-5.6-luna   ~/code/project   main 󰄬  󰢻 Refactor authentication 
-• 󰚩 THINKING  󰍛 CTX ████████████░░░░░░░░ 124k/272k (45.6%)  󰋊 IN 130k  󰇚 OUT 8.2k  …
+• 󰚩 THINKING  󰍛 CTX ████████████░░░░░░░░ 124k/272k (45.6%)   IN 130k  󰇚 OUT 8.2k  …
 ```
 
 Colors and spacing are rendered by Pi; the text preview is intentionally approximate.
