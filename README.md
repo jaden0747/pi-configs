@@ -5,7 +5,7 @@ A colorful VS Code Dark Modern makeover for [Pi](https://pi.dev): an accurate Da
 ## Preview
 
 ```text
-󰚩 gpt-5.6-luna   ~/code/project   main 󰄬  󰢻 Refactor authentication 
+󰚩 gpt-5.6-luna  󰒲 THINK high   ~/code/project   main 󰄬  󰢻 Refactor authentication 
 • 󰚩 THINKING  󰍛 CTX ████████████░░░░░░░░ 124k/272k (45.6%)   IN 130k   OUT 8.2k  …
 ```
 
@@ -16,8 +16,8 @@ Colors and spacing are rendered by Pi; the text preview is intentionally approxi
 - Official VS Code Dark Modern UI colors and Dark+ syntax colors
 - Terminal-adjusted contrast for borders and secondary text
 - Full-width, two-row Powerline footer with colorful semantic segments
-- Model anchored at the far left of the first row, with provider hidden
-- Path, clean/dirty Git branch, session title, and extension statuses
+- Model anchored at the far left with a high-contrast thinking-level segment beside it; provider hidden
+- Path, clean/dirty Git branch, concise first-prompt summary, and extension statuses
 - Icon-rich `READY`, `THINKING`, `TOOLS`, `WAITING`, and `ERROR` activity states
 - Tool-specific icons, current tool name, and parallel-tool count
 - 20-cell context bar with eighth-block precision
@@ -77,7 +77,7 @@ node setup.mjs --link --dry-run
 ## Notes
 
 - Home-relative paths use `/`; paths outside home use absolute paths with `/`.
-- Session titles fall back to the first user prompt.
+- Session titles fall back to an eight-word summary of the first user prompt.
 - Errors remain visible until the next agent action.
 - Auto-compaction is shown only when explicitly disabled in global or trusted project settings.
 - The footer omits subscription-auth status by design.

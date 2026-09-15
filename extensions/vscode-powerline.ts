@@ -23,7 +23,6 @@ const COLORS = {
   raised: "#252526",
   input: "#313131",
   blue: "#0078D4",
-  blueBright: "#4DAAFC",
   contextBlue: "#264F78",
   text: "#CCCCCC",
   white: "#FFFFFF",
@@ -32,13 +31,13 @@ const COLORS = {
   green: "#2EA043",
   amber: "#D7BA7D",
   red: "#F85149",
-  cyan: "#4EC9B0",
   orange: "#CE9178",
   pinkLight: "#E9A6C3",
   yellow: "#DCDCAA",
   tealDark: "#0E5A53",
   greenDark: "#1F6F3A",
   purpleDark: "#4B3869",
+  thinkingBg: "#C586C0",
 } as const;
 
 const RESET = "\x1b[0m";
@@ -104,15 +103,26 @@ function truncateMiddleLeft(text: string, width: number): string {
   return `…${text.slice(-(width - 1))}`;
 }
 
-function firstUserPrompt(ctx: ExtensionContext): string {
+function summarizePrompt(text: string, maximumWords = 8): string {
+  const clean = sanitize(text)
+    .replace(/^(?:please|pls)\s+/i, "")
+    .replace(/^(?:can|could|would|will)\s+you\s+/i, "")
+    .replace(/^i\s+(?:want|need|would like)\s+(?:you\s+)?to\s+/i, "");
+  const firstThought = clean.split(/(?:[.!?;]|\s+(?:moreover|also|then)\s*,?)/i, 1)[0]?.trim() ?? "";
+  const words = firstThought.split(/\s+/).filter(Boolean);
+  if (words.length === 0) return "new session";
+  const summary = words.slice(0, maximumWords).join(" ").replace(/[,.:;!?]+$/, "");
+  return words.length > maximumWords ? `${summary}…` : summary;
+}
+
+function firstPromptSummary(ctx: ExtensionContext): string {
   for (const entry of ctx.sessionManager.getBranch()) {
     if (entry.type !== "message" || entry.message.role !== "user") continue;
     const content = entry.message.content;
     const text = typeof content === "string"
       ? content
       : (content as any[]).filter((part) => part.type === "text").map((part) => part.text ?? "").join(" ");
-    const clean = sanitize(text);
-    if (clean) return clean;
+    if (sanitize(text)) return summarizePrompt(text);
   }
   return "new session";
 }
@@ -202,18 +212,6 @@ function compactionEnabled(cwd: string, projectTrusted: boolean): boolean {
   const globalValue = readSetting(resolve(configRoot, "settings.json"));
   const projectValue = projectTrusted ? readSetting(resolve(cwd, CONFIG_DIR_NAME, "settings.json")) : undefined;
   return projectValue ?? globalValue ?? true;
-}
-
-function thinkingColor(level: string | undefined): string {
-  switch (level) {
-    case "minimal": return COLORS.blue;
-    case "low": return COLORS.blueBright;
-    case "medium": return COLORS.cyan;
-    case "high": return COLORS.amber;
-    case "xhigh":
-    case "max": return COLORS.red;
-    default: return COLORS.dim;
-  }
 }
 
 function activityIcon(value: Activity): string {
@@ -311,7 +309,7 @@ export default function vscodePowerline(pi: ExtensionAPI) {
           const sessionMax = wide ? 48 : 24;
           const pathMax = wide ? 72 : 36;
           const branch = footerData.getGitBranch();
-          const sessionName = sanitize(ctx.sessionManager.getSessionName() ?? firstUserPrompt(ctx));
+          const sessionName = sanitize(ctx.sessionManager.getSessionName() ?? firstPromptSummary(ctx));
           const model = sanitize(ctx.model?.id ?? "no-model");
           const statuses = [...footerData.getExtensionStatuses().entries()]
             .filter(([key]) => key !== "vscode-powerline")
@@ -322,6 +320,7 @@ export default function vscodePowerline(pi: ExtensionAPI) {
 
           const row1Left: Segment[] = [
             { text: `󰚩 ${truncateToWidth(model, 34, "…")}`, background: COLORS.purpleDark, foreground: COLORS.white, bold: true, priority: Number.POSITIVE_INFINITY },
+            { text: `󰒲 THINK ${ctx.thinkingLevel ?? "off"}`, background: COLORS.thinkingBg, foreground: COLORS.surface, bold: true, priority: Number.POSITIVE_INFINITY },
             { text: ` ${truncateMiddleLeft(displayPath(ctx.cwd), pathMax)}`, background: COLORS.blue, foreground: COLORS.white, priority: Number.POSITIVE_INFINITY },
           ];
           if (branch) row1Left.push({ text: ` ${sanitize(branch)}${dirty ? " 󰀨" : " 󰄬"}`, background: dirty ? COLORS.orange : COLORS.greenDark, foreground: COLORS.white, bold: dirty, priority: Number.POSITIVE_INFINITY });
@@ -364,7 +363,6 @@ export default function vscodePowerline(pi: ExtensionAPI) {
             { text: ` IN ${compactNumber(totals.input)}   OUT ${compactNumber(totals.output)}`, background: COLORS.pinkLight, foreground: COLORS.surface, bold: true, priority: 3 },
             { text: `󰆼 CACHE ${compactNumber(totals.cacheRead)}   ${compactNumber(totals.cacheWrite)}  󰈸 HIT ${hit}`, background: COLORS.purpleDark, foreground: COLORS.white, priority: 2 },
             { text: `󰝑 COST ${formatCost(totals.cost)}`, background: COLORS.orange, foreground: COLORS.white, bold: true, priority: 1 },
-            { text: `󰒲 THINK ${ctx.thinkingLevel ?? "off"}`, background: COLORS.input, foreground: thinkingColor(ctx.thinkingLevel), bold: true, priority: 4 },
           ];
 
           let fittedRow2 = fitByPriority(row2Segments, width);
