@@ -20,7 +20,7 @@ Colors and spacing are rendered by Pi; the text preview is intentionally approxi
 - Teal current-path segment, clean/dirty Git branch, and extension statuses
 - Icon-rich `READY`, `THINKING`, `TOOLS`, `WAITING`, and `ERROR` activity states
 - Tool-specific icons, current tool name, and parallel-tool count
-- 20-cell context bar with eighth-block precision
+- Seam-free 20-cell context bar with solid-cell rendering
 - Context colors based on absolute usage:
   - green below 50k tokens
   - amber from 50k through 150k

@@ -43,7 +43,6 @@ const COLORS = {
 const RESET = "\x1b[0m";
 const POWERLINE_RIGHT = "";
 const PULSE = ["·", "•", "●", "•"];
-const PARTIAL_BLOCKS = ["", "▏", "▎", "▍", "▌", "▋", "▊", "▉"];
 
 function rgb(hex: string): string {
   const value = hex.slice(1);
@@ -135,12 +134,9 @@ function contextColor(tokens: number | null): string {
 
 function contextBar(tokens: number | null, maximum: number, cells = 20): string {
   if (tokens === null || maximum <= 0) return "░".repeat(cells);
-  const exact = Math.max(0, Math.min(1, tokens / maximum)) * cells;
-  const full = Math.floor(exact);
-  const partialIndex = Math.floor((exact - full) * 8);
-  const partial = full < cells ? PARTIAL_BLOCKS[partialIndex] ?? "" : "";
-  const empty = Math.max(0, cells - full - (partial ? 1 : 0));
-  return `${"█".repeat(full)}${partial}${"░".repeat(empty)}`;
+  const ratio = Math.max(0, Math.min(1, tokens / maximum));
+  const full = Math.round(ratio * cells);
+  return `${"█".repeat(full)}${"░".repeat(cells - full)}`;
 }
 
 function transition(from: string, to: string): string {
