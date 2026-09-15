@@ -288,20 +288,35 @@ export default function vscodePowerline(pi: ExtensionAPI) {
             .filter(Boolean)
             .join("  ");
 
+          const stateIcon = activity === "TOOLS" && activeTools.size > 0
+            ? toolIcon([...activeTools.values()].at(-1)!)
+            : activityIcon(activity);
+          const pulse = activity === "READY" || activity === "ERROR" ? stateIcon : `${PULSE[pulseFrame]} ${stateIcon}`;
+          const parallelCount = activity === "TOOLS" && activeTools.size > 1 ? ` +${activeTools.size - 1}` : "";
+          const activityBackground = activity === "ERROR" ? COLORS.red : activity === "READY" ? COLORS.greenDark : activity === "WAITING" ? COLORS.orange : COLORS.blue;
+
           const row1Left: Segment[] = [
+            { text: `${pulse} ${activity}${parallelCount}`, background: activityBackground, foreground: COLORS.white, bold: true, priority: Number.POSITIVE_INFINITY },
             { text: `󰚩 ${truncateToWidth(model, 34, "…")}`, background: COLORS.purpleDark, foreground: COLORS.white, bold: true, priority: Number.POSITIVE_INFINITY },
-            { text: `󰒲 ${ctx.thinkingLevel ?? "off"}`, background: COLORS.thinkingBg, foreground: COLORS.surface, bold: true, priority: Number.POSITIVE_INFINITY },
-            { text: ` ${truncateMiddleLeft(displayPath(ctx.cwd), pathMax)}`, background: COLORS.pathTeal, foreground: COLORS.white, priority: Number.POSITIVE_INFINITY },
+            { text: `󰒲 ${ctx.thinkingLevel ?? "off"}`, background: COLORS.thinkingBg, foreground: COLORS.surface, bold: true, priority: 4 },
+            { text: ` ${truncateMiddleLeft(displayPath(ctx.cwd), pathMax)}`, background: COLORS.pathTeal, foreground: COLORS.white, priority: 3 },
           ];
-          if (branch) row1Left.push({ text: ` ${sanitize(branch)}${dirty ? " 󰀨" : " 󰄬"}`, background: dirty ? COLORS.orange : COLORS.greenDark, foreground: COLORS.white, bold: dirty, priority: Number.POSITIVE_INFINITY });
+          if (branch) row1Left.push({ text: ` ${sanitize(branch)}${dirty ? " 󰀨" : " 󰄬"}`, background: dirty ? COLORS.orange : COLORS.greenDark, foreground: COLORS.white, bold: dirty, priority: 2 });
           if (statuses) row1Left.push({ text: `󰖟 ${statuses}`, background: COLORS.input, foreground: COLORS.yellow, priority: 1 });
 
           let fittedLeft = fitByPriority(row1Left, width);
           let left = renderSegments(fittedLeft);
           let leftWidth = visibleWidth(left);
           if (leftWidth > width) {
-            fittedLeft = fittedLeft.slice(0, 1);
-            fittedLeft[0] = { ...fittedLeft[0]!, text: truncateToWidth(fittedLeft[0]!.text, Math.max(4, width - 2), "…") };
+            const activityWidth = segmentsWidth([fittedLeft[0]!]);
+            if (fittedLeft.length > 1 && width > activityWidth + 4) {
+              fittedLeft = [
+                fittedLeft[0]!,
+                { ...fittedLeft[1]!, text: truncateToWidth(fittedLeft[1]!.text, width - activityWidth - 3, "…") },
+              ];
+            } else {
+              fittedLeft = [{ ...fittedLeft[0]!, text: truncateToWidth(fittedLeft[0]!.text, Math.max(1, width - 3), "…") }];
+            }
             left = renderSegments(fittedLeft);
             leftWidth = visibleWidth(left);
           }
@@ -315,17 +330,10 @@ export default function vscodePowerline(pi: ExtensionAPI) {
           const meterColor = contextColor(used);
           const meter = contextBar(used, maximum);
           const contextValue = `${used === null ? "?" : compactNumber(used)}/${compactNumber(maximum)} (${percent === null ? "?" : `${percent.toFixed(1)}%`})`;
-          const stateIcon = activity === "TOOLS" && activeTools.size > 0
-            ? toolIcon([...activeTools.values()].at(-1)!)
-            : activityIcon(activity);
-          const pulse = activity === "READY" || activity === "ERROR" ? stateIcon : `${PULSE[pulseFrame]} ${stateIcon}`;
-          const parallelCount = activity === "TOOLS" && activeTools.size > 1 ? ` +${activeTools.size - 1}` : "";
-          const activityBackground = activity === "ERROR" ? COLORS.red : activity === "READY" ? COLORS.greenDark : activity === "WAITING" ? COLORS.orange : COLORS.blue;
           const hit = totals.latestCacheHit === undefined ? "—" : `${totals.latestCacheHit.toFixed(1)}%`;
           const autoOff = compactionEnabled(ctx.cwd, ctx.isProjectTrusted()) ? "" : " · 󰅙";
 
           const row2Segments: Segment[] = [
-            { text: `${pulse}${parallelCount}`, background: activityBackground, foreground: COLORS.white, bold: true },
             { text: `󰍛 ${foreground(meter, meterColor, COLORS.white)} ${contextValue}${autoOff}`, background: COLORS.contextBlue, foreground: COLORS.white, bold: true },
             { text: ` ${compactNumber(totals.input)}   ${compactNumber(totals.output)}`, background: COLORS.pinkLight, foreground: COLORS.surface, bold: true, priority: 3 },
             { text: `󰆼 ${compactNumber(totals.cacheRead)}   ${compactNumber(totals.cacheWrite)}  󰈸 ${hit}`, background: COLORS.purpleDark, foreground: COLORS.white, priority: 2 },
@@ -334,9 +342,7 @@ export default function vscodePowerline(pi: ExtensionAPI) {
 
           let fittedRow2 = fitByPriority(row2Segments, width);
           if (segmentsWidth(fittedRow2) > width) {
-            fittedRow2 = fittedRow2.slice(0, 2);
-            const availableContext = Math.max(8, width - visibleWidth(` ${fittedRow2[0]!.text} `) - 4);
-            fittedRow2[1] = { ...fittedRow2[1]!, text: truncateToWidth(fittedRow2[1]!.text, availableContext, "…") };
+            fittedRow2 = [{ ...fittedRow2[0]!, text: truncateToWidth(fittedRow2[0]!.text, Math.max(1, width - 3), "…") }];
           }
           const renderedRow2 = renderSegments(fittedRow2);
           const row2Width = visibleWidth(renderedRow2);

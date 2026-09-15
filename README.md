@@ -5,8 +5,8 @@ A curated [Pi](https://pi.dev) setup with an accurate VS Code Dark Modern/Dark+ 
 ## Preview
 
 ```text
-󰚩 gpt-5.6-luna  󰒲 high   ~/code/project   main 󰄬 
-• 󰚩  󰍛 ████████████░░░░░░░░ 124k/272k (45.6%)   130k   8.2k  …
+• 󰚩 THINKING  󰚩 gpt-5.6-luna  󰒲 high   ~/code/project   main 󰄬 
+󰍛 ████████████░░░░░░░░ 124k/272k (45.6%)   130k   8.2k  …
 ```
 
 Colors and spacing are rendered by Pi; the text preview is intentionally approximate.
@@ -16,10 +16,10 @@ Colors and spacing are rendered by Pi; the text preview is intentionally approxi
 - Official VS Code Dark Modern UI colors and Dark+ syntax colors
 - Terminal-adjusted contrast for borders and secondary text
 - Full-width, two-row Powerline footer with colorful semantic segments
-- Model anchored at the far left with a high-contrast thinking-level segment beside it; provider hidden
+- Activity anchored at the far left, followed by model and high-contrast thinking level; provider hidden
 - Teal current-path segment, clean/dirty Git branch, and extension statuses
-- Label-free icons for `READY`, `THINKING`, `TOOLS`, `WAITING`, and `ERROR` states
-- Tool-specific icons and parallel-tool count without textual labels
+- Visible `READY`, `THINKING`, `TOOLS`, `WAITING`, and `ERROR` activity labels
+- Tool-specific activity icons and parallel-tool count
 - Seam-free 20-cell context bar with solid-cell rendering
 - Context colors based on absolute usage:
   - green below 50k tokens
