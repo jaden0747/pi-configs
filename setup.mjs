@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { copyFile, lstat, mkdir, readFile, rename, symlink, writeFile } from "node:fs/promises";
+import { copyFile, cp, lstat, mkdir, readFile, rename, symlink, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import process from "node:process";
@@ -13,7 +13,7 @@ if (unknown.length > 0) {
   process.exit(1);
 }
 if (args.has("--help") || args.has("-h")) {
-  console.log(`Install VS Code Dark Modern Pi configuration.
+  console.log(`Install the curated Pi theme, footer, model defaults, and skills.
 
 Usage: node setup.mjs [--link] [--dry-run]
 
@@ -33,6 +33,11 @@ const files = [
   [join(root, "themes", "vscode-dark-modern.json"), join(configDir, "themes", "vscode-dark-modern.json")],
   [join(root, "extensions", "vscode-powerline.ts"), join(configDir, "extensions", "vscode-powerline.ts")],
 ];
+const skillNames = ["caveman", "grill-me", "grill-with-docs", "handoff", "review", "zoom-out"];
+const directories = skillNames.map((name) => [
+  join(root, "skills", name),
+  join(configDir, "skills", name),
+]);
 
 async function exists(path) {
   try {
@@ -70,6 +75,25 @@ async function installFile(source, destination) {
   }
 }
 
+async function installDirectory(source, destination) {
+  console.log(`${link ? "link" : "copy"}    ${source} -> ${destination}`);
+  if (dryRun) return;
+  await mkdir(dirname(destination), { recursive: true });
+  await backup(destination);
+  if (link) {
+    try {
+      await symlink(source, destination, process.platform === "win32" ? "junction" : "dir");
+    } catch (error) {
+      if (process.platform === "win32" && ["EPERM", "EACCES"].includes(error?.code)) {
+        throw new Error("Windows denied symlink creation. Enable Developer Mode, run as Administrator, or install without --link.");
+      }
+      throw error;
+    }
+  } else {
+    await cp(source, destination, { recursive: true });
+  }
+}
+
 async function updateSettings() {
   const settingsPath = join(configDir, "settings.json");
   const desiredSettings = {
@@ -102,6 +126,7 @@ async function updateSettings() {
 
 try {
   for (const [source, destination] of files) await installFile(source, destination);
+  for (const [source, destination] of directories) await installDirectory(source, destination);
   await updateSettings();
   console.log(`\nInstalled in ${configDir}. Run /reload in Pi, or restart Pi.`);
 } catch (error) {

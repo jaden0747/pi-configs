@@ -1,6 +1,6 @@
 # pi-configs
 
-A colorful VS Code Dark Modern makeover for [Pi](https://pi.dev): an accurate Dark Modern/Dark+ theme, a dense two-row Powerline footer, and GPT-5.6 Luna startup defaults.
+A curated [Pi](https://pi.dev) setup with an accurate VS Code Dark Modern/Dark+ theme, a dense two-row Powerline footer, GPT-5.6 Luna startup defaults, and six agent skills.
 
 ## Preview
 
@@ -28,6 +28,7 @@ Colors and spacing are rendered by Pi; the text preview is intentionally approxi
 - Input, output, cache read/write, latest cache-hit rate, cost, and thinking level
 - Priority-based fallback for narrow terminals
 - Matching calm pulse in the footer and editor border
+- Curated skills: `caveman`, `grill-me`, `grill-with-docs`, `handoff`, `review`, and `zoom-out`
 
 ## Requirements
 
@@ -44,7 +45,7 @@ cd pi-configs
 node setup.mjs
 ```
 
-The installer copies files into `~/.pi/agent` (or `$PI_CODING_AGENT_DIR`) and safely merges the active theme plus the `openai-codex/gpt-5.6-luna` startup default into `settings.json`. Existing destination files and settings are timestamp-backed up.
+The installer copies the theme, extension, and curated skills into `~/.pi/agent` (or `$PI_CODING_AGENT_DIR`) and safely merges the active theme plus the `openai-codex/gpt-5.6-luna` startup default into `settings.json`. Existing destination files, skill directories, and settings are timestamp-backed up.
 
 Restart Pi or run `/reload`.
 
@@ -54,7 +55,7 @@ Restart Pi or run `/reload`.
 node setup.mjs --link
 ```
 
-This symlinks the theme and extension so repository edits apply directly. On Windows, enable Developer Mode or run an elevated terminal if symlink creation is denied.
+This symlinks the theme, extension, and each bundled skill directory so repository edits apply directly. On Windows, enable Developer Mode or run an elevated terminal if symlink creation is denied.
 
 ### Preview changes
 
@@ -71,6 +72,13 @@ node setup.mjs --link --dry-run
 │   └── vscode-powerline.ts
 ├── themes/
 │   └── vscode-dark-modern.json
+├── skills/
+│   ├── caveman/
+│   ├── grill-me/
+│   ├── grill-with-docs/
+│   ├── handoff/
+│   ├── review/
+│   └── zoom-out/
 └── settings.json  # theme and GPT-5.6 Luna startup defaults merged
 ```
 
@@ -80,6 +88,7 @@ node setup.mjs --link --dry-run
 - Errors remain visible until the next agent action.
 - Auto-compaction is shown only when explicitly disabled in global or trusted project settings.
 - The footer omits subscription-auth status by design.
+- Setup installs or replaces the six bundled skill directories but does not remove unrelated skills.
 
 ## License
 
