@@ -39,6 +39,7 @@ const packageNames = [
   "npm:pi-subagents",
   "npm:@juicesharp/rpiv-ask-user-question",
   "npm:@juicesharp/rpiv-todo",
+  "npm:pi-ponytail",
 ];
 const directories = skillNames.map((name) => [
   join(root, "skills", name),

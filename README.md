@@ -90,7 +90,7 @@ node setup.mjs --link --dry-run
 - Auto-compaction is shown only when explicitly disabled in global or trusted project settings.
 - The footer omits subscription-auth status by design.
 - Setup installs or replaces the six bundled skill directories but does not remove unrelated skills.
-- Setup adds `pi-web-access`, `pi-subagents`, `@juicesharp/rpiv-ask-user-question`, and `@juicesharp/rpiv-todo` to `settings.json` without removing unrelated packages.
+- Setup adds `pi-web-access`, `pi-subagents`, `@juicesharp/rpiv-ask-user-question`, `@juicesharp/rpiv-todo`, and `pi-ponytail` to `settings.json` without removing unrelated packages.
 
 ## License
 
