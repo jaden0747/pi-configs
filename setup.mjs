@@ -4,6 +4,8 @@ import { copyFile, cp, lstat, mkdir, readFile, rm, symlink, writeFile } from "no
 import { homedir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import process from "node:process";
+import { execFile } from "node:child_process";
+import { promisify } from "node:util";
 import { fileURLToPath } from "node:url";
 
 const args = new Set(process.argv.slice(2));
@@ -34,12 +36,14 @@ const files = [
 ];
 const skillNames = ["caveman", "grill-me", "grill-with-docs", "handoff", "review", "zoom-out"];
 const packageNames = [
-  "npm:pi-web-access",
   "npm:pi-subagents",
   "npm:@juicesharp/rpiv-ask-user-question",
   "npm:@juicesharp/rpiv-todo",
-  "npm:pi-ponytail",
 ];
+// Packages previously managed by this repository. They are pruned during setup
+// so syncing the repository also removes them from another machine.
+const retiredPackageNames = ["npm:pi-web-access", "npm:pi-ponytail"];
+const run = promisify(execFile);
 const directories = skillNames.map((name) => [
   join(root, "skills", name),
   join(configDir, "skills", name),
@@ -108,7 +112,22 @@ async function updateSettings() {
       throw new Error(`Cannot parse ${settingsPath}: ${error.message}`);
     }
   }
-  const packages = [...new Set([...(Array.isArray(settings.packages) ? settings.packages : []), ...packageNames])];
+  const existingPackages = Array.isArray(settings.packages) ? settings.packages : [];
+  const packages = [...new Set([
+    ...existingPackages.filter((name) => !retiredPackageNames.includes(name)),
+    ...packageNames,
+  ])];
+  const retired = existingPackages.filter((name) => retiredPackageNames.includes(name));
+  for (const packageName of retired) {
+    console.log(`remove   ${packageName}`);
+    if (!dryRun) {
+      try {
+        await run("pi", ["remove", packageName], { cwd: root });
+      } catch (error) {
+        throw new Error(`Cannot remove ${packageName}: ${error.stderr?.trim() || error.message}`);
+      }
+    }
+  }
   const changes = Object.entries(desiredSettings).filter(([key, value]) => settings[key] !== value);
   if (JSON.stringify(settings.packages) !== JSON.stringify(packages)) changes.push(["packages", packages]);
   if (changes.length === 0) {
