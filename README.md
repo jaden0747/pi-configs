@@ -1,6 +1,6 @@
 # pi-configs
 
-A curated [Pi](https://pi.dev) setup with an accurate VS Code Dark Modern/Dark+ theme, a calm two-row footer, GPT-5.6 Luna startup defaults, and six agent skills.
+A curated [Pi](https://pi.dev) setup with an accurate VS Code Dark Modern/Dark+ theme, a calm two-row footer, GPT-5.6 Luna startup defaults, six agent skills, and installed extensions.
 
 ## Preview
 
@@ -46,7 +46,7 @@ cd pi-configs
 node setup.mjs
 ```
 
-The installer copies the theme, extension, and curated skills into `~/.pi/agent` (or `$PI_CODING_AGENT_DIR`) and safely merges the active theme plus the `openai-codex/gpt-5.6-luna` startup default into `settings.json`. Existing destination files, skill directories, and settings are timestamp-backed up.
+The installer copies the theme, extension, and curated skills into `~/.pi/agent` (or `$PI_CODING_AGENT_DIR`) and safely merges the active theme, the `openai-codex/gpt-5.6-luna` startup default, and the installed Pi packages into `settings.json`. Existing destination files, skill directories, and settings are timestamp-backed up.
 
 Restart Pi or run `/reload`.
 
@@ -80,7 +80,7 @@ node setup.mjs --link --dry-run
 │   ├── handoff/
 │   ├── review/
 │   └── zoom-out/
-└── settings.json  # theme and GPT-5.6 Luna startup defaults merged
+└── settings.json  # theme, packages, and GPT-5.6 Luna startup defaults merged
 ```
 
 ## Notes
@@ -90,6 +90,7 @@ node setup.mjs --link --dry-run
 - Auto-compaction is shown only when explicitly disabled in global or trusted project settings.
 - The footer omits subscription-auth status by design.
 - Setup installs or replaces the six bundled skill directories but does not remove unrelated skills.
+- Setup adds `pi-web-access`, `pi-subagents`, `@juicesharp/rpiv-ask-user-question`, and `@juicesharp/rpiv-todo` to `settings.json` without removing unrelated packages.
 
 ## License
 

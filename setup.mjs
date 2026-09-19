@@ -34,6 +34,12 @@ const files = [
   [join(root, "extensions", "vscode-powerline.ts"), join(configDir, "extensions", "vscode-powerline.ts")],
 ];
 const skillNames = ["caveman", "grill-me", "grill-with-docs", "handoff", "review", "zoom-out"];
+const packageNames = [
+  "npm:pi-web-access",
+  "npm:pi-subagents",
+  "npm:@juicesharp/rpiv-ask-user-question",
+  "npm:@juicesharp/rpiv-todo",
+];
 const directories = skillNames.map((name) => [
   join(root, "skills", name),
   join(configDir, "skills", name),
@@ -109,18 +115,20 @@ async function updateSettings() {
       throw new Error(`Cannot parse ${settingsPath}: ${error.message}`);
     }
   }
+  const packages = [...new Set([...(Array.isArray(settings.packages) ? settings.packages : []), ...packageNames])];
   const changes = Object.entries(desiredSettings).filter(([key, value]) => settings[key] !== value);
+  if (JSON.stringify(settings.packages) !== JSON.stringify(packages)) changes.push(["packages", packages]);
   if (changes.length === 0) {
-    console.log(`keep     ${settingsPath} (theme and model defaults already selected)`);
+    console.log(`keep     ${settingsPath} (theme, model defaults, and packages already selected)`);
     return;
   }
-  console.log(`update   ${settingsPath} (${changes.map(([key, value]) => `${key} = ${value}`).join(", ")})`);
+  console.log(`update   ${settingsPath} (${changes.map(([key, value]) => `${key} = ${JSON.stringify(value)}`).join(", ")})`);
   if (dryRun) return;
   await mkdir(configDir, { recursive: true });
   if (await exists(settingsPath)) {
     await copyFile(settingsPath, `${settingsPath}.bak-${stamp}`);
   }
-  Object.assign(settings, desiredSettings);
+  Object.assign(settings, desiredSettings, { packages });
   await writeFile(settingsPath, `${JSON.stringify(settings, null, 2)}\n`, "utf8");
 }
 
