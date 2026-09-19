@@ -46,7 +46,7 @@ cd pi-configs
 node setup.mjs
 ```
 
-The installer copies the theme, extension, and curated skills into `~/.pi/agent` (or `$PI_CODING_AGENT_DIR`) and safely merges the active theme, the `openai-codex/gpt-5.6-luna` startup default, and the installed Pi packages into `settings.json`. Existing destination files, skill directories, and settings are timestamp-backed up.
+The installer copies the theme, extension, and curated skills into `~/.pi/agent` (or `$PI_CODING_AGENT_DIR`) and safely merges the active theme, the `openai-codex/gpt-5.6-luna` startup default, and the installed Pi packages into `settings.json`. Existing destination files, skill directories, and settings are replaced without creating backups.
 
 Restart Pi or run `/reload`.
 

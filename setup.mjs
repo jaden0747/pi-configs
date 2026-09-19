@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { copyFile, cp, lstat, mkdir, readFile, rename, symlink, writeFile } from "node:fs/promises";
+import { copyFile, cp, lstat, mkdir, readFile, rm, symlink, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import process from "node:process";
@@ -28,7 +28,6 @@ const link = args.has("--link");
 const dryRun = args.has("--dry-run");
 const root = dirname(fileURLToPath(import.meta.url));
 const configDir = resolve(process.env.PI_CODING_AGENT_DIR || join(homedir(), ".pi", "agent"));
-const stamp = new Date().toISOString().replaceAll(":", "-").replace(/\.\d{3}Z$/, "Z");
 const files = [
   [join(root, "themes", "vscode-dark-modern.json"), join(configDir, "themes", "vscode-dark-modern.json")],
   [join(root, "extensions", "vscode-powerline.ts"), join(configDir, "extensions", "vscode-powerline.ts")],
@@ -56,18 +55,11 @@ async function exists(path) {
   }
 }
 
-async function backup(path) {
-  if (!(await exists(path))) return;
-  const backupPath = `${path}.bak-${stamp}`;
-  console.log(`backup  ${path} -> ${backupPath}`);
-  if (!dryRun) await rename(path, backupPath);
-}
-
 async function installFile(source, destination) {
   console.log(`${link ? "link" : "copy"}    ${source} -> ${destination}`);
   if (dryRun) return;
   await mkdir(dirname(destination), { recursive: true });
-  await backup(destination);
+  await rm(destination, { recursive: true, force: true });
   if (link) {
     try {
       await symlink(source, destination, "file");
@@ -86,7 +78,7 @@ async function installDirectory(source, destination) {
   console.log(`${link ? "link" : "copy"}    ${source} -> ${destination}`);
   if (dryRun) return;
   await mkdir(dirname(destination), { recursive: true });
-  await backup(destination);
+  await rm(destination, { recursive: true, force: true });
   if (link) {
     try {
       await symlink(source, destination, process.platform === "win32" ? "junction" : "dir");
@@ -126,9 +118,6 @@ async function updateSettings() {
   console.log(`update   ${settingsPath} (${changes.map(([key, value]) => `${key} = ${JSON.stringify(value)}`).join(", ")})`);
   if (dryRun) return;
   await mkdir(configDir, { recursive: true });
-  if (await exists(settingsPath)) {
-    await copyFile(settingsPath, `${settingsPath}.bak-${stamp}`);
-  }
   Object.assign(settings, desiredSettings, { packages });
   await writeFile(settingsPath, `${JSON.stringify(settings, null, 2)}\n`, "utf8");
 }
